@@ -1,0 +1,51 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Customer {
+  id         String   @id @default(uuid())
+  shopifyId  BigInt   @unique
+  firstName  String?
+  lastName   String?
+  email      String?
+  city       String?
+  country    String?
+  totalSpent String   @default("0.00")
+  orders     Order[]
+  shopId     String
+  createdAt  DateTime @default(now())
+}
+
+model Product {
+  id        String   @id @default(uuid())
+  shopifyId BigInt   @unique
+  title     String
+  price     String
+  shopId    String
+  createdAt DateTime @default(now())
+}
+
+model Order {
+  id         String    @id @default(uuid())
+  shopifyId  BigInt    @unique
+  totalPrice String
+  status     String?
+  customer   Customer? @relation(fields: [customerId], references: [id])
+  customerId String?
+  shopId     String
+  createdAt  DateTime  @default(now())
+}
+
+model Tenant {
+  id          String   @id @default(uuid())
+  email       String   @unique
+  password    String
+  shopDomain  String   @unique
+  accessToken String
+  createdAt   DateTime @default(now())
+}
