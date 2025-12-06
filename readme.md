@@ -32,8 +32,8 @@ graph TD
 ## 🛠 Tech Stack
 
 *   **Runtime**: Node.js & Express.js
-*   **Database**: PostgreSQL (via Neon/Railway)
-*   **ORM**: Prisma (Schema management & Typed queries)
+*   **Database**: PostgreSQL 
+*   **ORM**: Prisma 
 *   **Scheduling**: node-cron
 *   **Security**: bcryptjs
 
