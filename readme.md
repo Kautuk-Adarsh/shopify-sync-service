@@ -1,4 +1,4 @@
-# 🛒 Xeno Data Ingestion Service (Backend)
+#  Data Ingestion Service (Backend)
 
 ## 📌 Overview
 It is a multi-tenant Node.js application designed to ingest data from Shopify (Products, Customers, Orders) and serve analytics to a frontend dashboard.
