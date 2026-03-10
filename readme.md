@@ -139,11 +139,7 @@ All data tables include a `shopId` column to ensure strict tenant isolation.
 *   **Reasoning**: Allows all tenants to live in one database (cost-effective) while preventing data leaks via strict `where: { shopId }` clauses in Prisma.
 
 ---
-
-## 🔮 Next Steps (Productionization)
-
-To take this from MVP to Enterprise scale, the following improvements are planned:
-
-1.  **Queue System**: Move ingestion logic to Redis (BullMQ) to handle Shopify's API rate limits ("Leaky Bucket") gracefully.
-2.  **Webhooks**: Implement Shopify Webhooks for real-time updates (e.g., `orders/create`), reducing the reliance on polling.
-3.  **Security**: Implement JWT (JSON Web Tokens) for stateless session management instead of simple client-side storage.
+## 🔮 Demo Login
+* **Email:** admin@xeno.com
+* **Password:** password123
+*(Note: This is a test account with sample data)*
