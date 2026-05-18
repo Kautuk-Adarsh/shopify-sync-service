@@ -21,7 +21,7 @@ app.use('/api/ingest', ingestRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 
 cron.schedule('*/2 * * * *', async () => {
-    console.log('--- 🔄 Scheduled Data Sync Started ---');
+    console.log('---  Scheduled Data Sync Started ---');
     
     try {
         const mockReq = {};

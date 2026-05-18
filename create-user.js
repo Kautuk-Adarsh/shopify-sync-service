@@ -28,13 +28,13 @@ async function main() {
       },
     });
 
-    console.log(`\n✅ Success! Tenant created.`);
+    console.log(`\n Success! Tenant created.`);
     console.log(`   Email: ${tenant.email}`);
     console.log(`   Password: ${plainPassword}`);
     console.log(`   Linked Shop: ${tenant.shopDomain}`);
     
   } catch (e) {
-    console.error("❌ Error creating tenant:", e);
+    console.error(" Error creating tenant:", e);
   }
 }
 

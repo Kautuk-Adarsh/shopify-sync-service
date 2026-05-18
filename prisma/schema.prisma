@@ -9,7 +9,7 @@ datasource db {
 
 model Customer {
   id         String   @id @default(uuid())
-  shopifyId  BigInt   @unique
+  shopifyId  BigInt
   firstName  String?
   lastName   String?
   email      String?
@@ -19,26 +19,32 @@ model Customer {
   orders     Order[]
   shopId     String
   createdAt  DateTime @default(now())
+
+  @@unique([shopId, shopifyId])
 }
 
 model Product {
   id        String   @id @default(uuid())
-  shopifyId BigInt   @unique
+  shopifyId BigInt
   title     String
   price     String
   shopId    String
   createdAt DateTime @default(now())
+
+  @@unique([shopId, shopifyId])
 }
 
 model Order {
   id         String    @id @default(uuid())
-  shopifyId  BigInt    @unique
+  shopifyId  BigInt
   totalPrice String
   status     String?
   customer   Customer? @relation(fields: [customerId], references: [id])
   customerId String?
   shopId     String
   createdAt  DateTime  @default(now())
+
+  @@unique([shopId, shopifyId])
 }
 
 model Tenant {

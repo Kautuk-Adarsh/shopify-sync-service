@@ -16,8 +16,7 @@ const syncProducts = async (req, res) => {
 
         for (const tenant of tenants) {
             try {
-                const shopDomain = tenant.shopDomain;
-                const accessToken = tenant.accessToken;
+                const { shopDomain, accessToken } = tenant;
 
                 console.log(`Syncing Products for: ${shopDomain}`);
 
@@ -38,11 +37,15 @@ const syncProducts = async (req, res) => {
                     const price = firstVariant ? firstVariant.price : "0.00";
 
                     await prisma.product.upsert({
-                        where: { shopifyId: BigInt(product.id) },
+                        where: { 
+                            shopId_shopifyId: {
+                                shopId: shopDomain,
+                                shopifyId: BigInt(product.id)
+                            }
+                        },
                         update: {
                             title: product.title,
-                            price: price,
-                            shopId: shopDomain 
+                            price: price
                         },
                         create: {
                             shopifyId: BigInt(product.id),
@@ -76,8 +79,7 @@ const syncCustomers = async (req, res) => {
 
         for (const tenant of tenants) {
             try {
-                const shopDomain = tenant.shopDomain;
-                const accessToken = tenant.accessToken;
+                const { shopDomain, accessToken } = tenant;
 
                 const url = `https://${shopDomain}/admin/api/2025-01/customers.json`;
                 const response = await axios.get(url, {
@@ -94,15 +96,19 @@ const syncCustomers = async (req, res) => {
                     const country = customer.default_address ? customer.default_address.country : null;
 
                     await prisma.customer.upsert({
-                        where: { shopifyId: BigInt(customer.id) },
+                        where: { 
+                            shopId_shopifyId: {
+                                shopId: shopDomain,
+                                shopifyId: BigInt(customer.id)
+                            }
+                        },
                         update: {
                             firstName: customer.first_name,
                             lastName: customer.last_name,
                             email: customer.email,
                             city: city,
                             country: country,
-                            totalSpent: customer.total_spent || "0.00",
-                            shopId: shopDomain
+                            totalSpent: customer.total_spent || "0.00"
                         },
                         create: {
                             shopifyId: BigInt(customer.id),
@@ -140,8 +146,7 @@ const syncOrders = async (req, res) => {
 
         for (const tenant of tenants) {
             try {
-                const shopDomain = tenant.shopDomain;
-                const accessToken = tenant.accessToken;
+                const { shopDomain, accessToken } = tenant;
 
                 const url = `https://${shopDomain}/admin/api/2025-01/orders.json?status=any`; 
                 const response = await axios.get(url, {
@@ -157,18 +162,27 @@ const syncOrders = async (req, res) => {
                     let dbCustomer = null;
                     if (order.customer) {
                         dbCustomer = await prisma.customer.findUnique({
-                            where: { shopifyId: BigInt(order.customer.id) }
+                            where: { 
+                                shopId_shopifyId: {
+                                    shopId: shopDomain,
+                                    shopifyId: BigInt(order.customer.id)
+                                }
+                            }
                         });
                     }
                     const internalCustomerId = dbCustomer ? dbCustomer.id : null;
 
                     await prisma.order.upsert({
-                        where: { shopifyId: BigInt(order.id) },
+                        where: { 
+                            shopId_shopifyId: {
+                                shopId: shopDomain,
+                                shopifyId: BigInt(order.id)
+                            }
+                        },
                         update: {
                             totalPrice: order.total_price,
                             status: order.financial_status,
-                            customerId: internalCustomerId, 
-                            shopId: shopDomain
+                            customerId: internalCustomerId
                         },
                         create: {
                             shopifyId: BigInt(order.id),
