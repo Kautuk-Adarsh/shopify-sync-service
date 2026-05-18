@@ -2,6 +2,59 @@ const {PrismaClient} = require('@prisma/client');
 const axios = require('axios');
 const prisma = new PrismaClient();
 
+const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+const shouldRetryRequest = (error) => {
+    const status = error?.response?.status;
+
+    if (!status) {
+        return true;
+    }
+
+    return status === 429 || status >= 500;
+};
+
+const getRetryDelay = (error, attempt) => {
+    const retryAfterHeader = error?.response?.headers?.['retry-after'];
+    const retryAfterSeconds = Number(retryAfterHeader);
+
+    if (Number.isFinite(retryAfterSeconds) && retryAfterSeconds > 0) {
+        return retryAfterSeconds * 1000;
+    }
+
+    const baseDelay = 500;
+    const maxDelay = 15000;
+    return Math.min(baseDelay * (2 ** (attempt - 1)), maxDelay);
+};
+
+const fetchShopifyJsonWithBackoff = async (url, accessToken, operation, maxRetries = 3) => {
+    let lastError;
+
+    for (let attempt = 1; attempt <= maxRetries; attempt += 1) {
+        try {
+            return await axios.get(url, {
+                headers: {
+                    'X-Shopify-Access-Token': accessToken,
+                    'Content-Type': 'application/json'
+                }
+            });
+        } catch (error) {
+            lastError = error;
+
+            if (attempt === maxRetries || !shouldRetryRequest(error)) {
+                throw error;
+            }
+
+            const delay = getRetryDelay(error, attempt);
+            const status = error?.response?.status || 'network';
+            console.warn(`${operation} failed with ${status}. Retrying in ${delay}ms (attempt ${attempt + 1}/${maxRetries})`);
+            await sleep(delay);
+        }
+    }
+
+    throw lastError;
+};
+
 
 const syncProducts = async (req, res) => {
     try {
@@ -22,12 +75,7 @@ const syncProducts = async (req, res) => {
 
                 const url = `https://${shopDomain}/admin/api/2025-01/products.json`;
                 
-                const response = await axios.get(url, {
-                    headers: {
-                        'X-Shopify-Access-Token': accessToken,
-                        'Content-Type': 'application/json'
-                    }
-                });
+                const response = await fetchShopifyJsonWithBackoff(url, accessToken, `Product sync for ${shopDomain}`);
 
                 const products = response.data.products;
 
@@ -82,12 +130,7 @@ const syncCustomers = async (req, res) => {
                 const { shopDomain, accessToken } = tenant;
 
                 const url = `https://${shopDomain}/admin/api/2025-01/customers.json`;
-                const response = await axios.get(url, {
-                    headers: {
-                        'X-Shopify-Access-Token': accessToken,
-                        'Content-Type': 'application/json'
-                    }
-                });
+                const response = await fetchShopifyJsonWithBackoff(url, accessToken, `Customer sync for ${shopDomain}`);
 
                 const customers = response.data.customers;
 
@@ -149,12 +192,7 @@ const syncOrders = async (req, res) => {
                 const { shopDomain, accessToken } = tenant;
 
                 const url = `https://${shopDomain}/admin/api/2025-01/orders.json?status=any`; 
-                const response = await axios.get(url, {
-                    headers: {
-                        'X-Shopify-Access-Token': accessToken,
-                        'Content-Type': 'application/json'
-                    }
-                });
+                const response = await fetchShopifyJsonWithBackoff(url, accessToken, `Order sync for ${shopDomain}`);
 
                 const orders = response.data.orders;
 
